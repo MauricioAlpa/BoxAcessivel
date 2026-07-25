@@ -1,11 +1,13 @@
-import express from 'express'
-import 'dotenv/config'
+import express from 'express';
+import 'dotenv/config';
+import routes from './src/routes/index.js';
 
 const app = express();
 
-
 const PORT = process.env.PORT ?? 3000;
 const NODE_ENV = process.env.NODE_ENV ?? "development";
+
+app.use(express.json());
 
 app.get("/health", (req, res) => {
   res.status(200).json({
@@ -15,6 +17,8 @@ app.get("/health", (req, res) => {
     environment: NODE_ENV,
   });
 });
+
+app.use(routes);
 
 app.listen(PORT, "0.0.0.0", () => {
   if (NODE_ENV === "development") {
