@@ -8,6 +8,7 @@ const PORT = process.env.PORT ?? 3000;
 const NODE_ENV = process.env.NODE_ENV ?? "development";
 
 app.use(express.json());
+app.set('trust proxy', true);
 
 app.get("/health", (req, res) => {
   res.status(200).json({

@@ -16,3 +16,12 @@ export async function criarOuReativarLead({ nome, email, telefone }) {
     throw new AppError('Erro ao registrar lead', 500);
   }
 }
+
+export async function contarLeads() {
+  try {
+    const result = await pool.query('SELECT COUNT(*)::int AS total FROM lead');
+    return result.rows[0].total;
+  } catch (err) {
+    throw new AppError('Erro ao contar leads', 500);
+  }
+}
