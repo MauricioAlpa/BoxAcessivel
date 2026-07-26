@@ -1,0 +1,29 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans); color: var(--color-text); }
+
+:root {
+  --color-navy: #14284b;
+  --color-navy-light: #1e3a6f;
+  --color-orange: #f2670a;
+  --color-whatsapp: #25d366;
+  --color-bg: #f5f7fa;
+  --color-white: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e7eb;
+
+  --status-novo: #2563eb;
+  --status-contato: #7c3aed;
+  --status-proposta: #f59e0b;
+  --status-negociando: #ec4899;
+  --status-fechado: #16a34a;
+
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
