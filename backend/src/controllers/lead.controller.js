@@ -1,6 +1,6 @@
 import { criarOuReativarLead } from '../models/lead.model.js';
 
-export class LeadController {
+class LeadController {
   static async criar(req, res, next) {
     try {
       const { nome, email, telefone } = req.body;
@@ -11,3 +11,5 @@ export class LeadController {
     }
   }
 }
+
+export default LeadController

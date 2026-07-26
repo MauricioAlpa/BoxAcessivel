@@ -1,4 +1,4 @@
-import { AppError } from '../utils/AppError.js';
+import { AppError } from '../utils/app.error.js';
 
 export function rotaNaoEncontrada(req, res, next) {
   next(new AppError(`Rota ${req.originalUrl} não existe`, 404));

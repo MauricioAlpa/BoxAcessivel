@@ -1,5 +1,5 @@
 import pool from '../config/database.js';
-import { AppError } from '../utils/AppError.js';
+import { AppError } from '../utils/app.error.js';
 
 export async function findAdminByEmail(email) {
   try {

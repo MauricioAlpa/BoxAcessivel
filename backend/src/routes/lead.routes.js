@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { LeadController } from '../controllers/lead.controller.js';
+import  LeadController  from '../controllers/lead.controller.js';
 import { Validacoes } from '../validations/lead.validation.js';
 import { handleValidation } from '../middlewares/handleValidation.middleware.js';
 
