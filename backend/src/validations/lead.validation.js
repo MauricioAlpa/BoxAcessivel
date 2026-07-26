@@ -12,4 +12,16 @@ export const Validacoes = {
     body('consentimento')
       .equals('true').withMessage('É necessário aceitar o uso dos dados'),
   ],
+
+  validaAtualizaStatus: () => [
+    body('status')
+      .isIn([
+        '1. Novo Lead',
+        '2. Em Contato',
+        '3. Proposta Enviada',
+        '4. Negociando',
+        '5. Fechado',
+      ])
+      .withMessage('Status inválido'),
+  ],
 };

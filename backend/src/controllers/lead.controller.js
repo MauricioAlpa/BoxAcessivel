@@ -1,6 +1,10 @@
-import { criarOuReativarLead } from '../models/lead.model.js';
+import {
+  criarOuReativarLead,
+  listarLeads,
+  atualizarStatusLead,
+} from '../models/lead.model.js';
 
-class LeadController {
+export class LeadController {
   static async criar(req, res, next) {
     try {
       const { nome, email, telefone } = req.body;
@@ -10,6 +14,24 @@ class LeadController {
       next(err);
     }
   }
-}
 
-export default LeadController
+  static async listar(req, res, next) {
+    try {
+      const leads = await listarLeads();
+      res.json(leads);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async atualizarStatus(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const lead = await atualizarStatusLead(id, status);
+      res.json(lead);
+    } catch (err) {
+      next(err);
+    }
+  }
+}
