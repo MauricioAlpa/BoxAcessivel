@@ -1,17 +1,38 @@
-import { useEffect, useState } from 'react';
-import { api } from '../../api/client';
-import { LeadForm } from '../../components/LeadForm/LeadForm';
-import './Gate.css';
+import { useEffect, useState } from "react";
+import { api } from "../../api/client";
+import { LeadForm } from "../../components/LeadForm/LeadForm";
+import "./Gate.css";
 
 const PRODUTOS = [
-  { legenda: 'Sem barreiras de acesso' },
-  { legenda: 'Elegância, conforto e segurança' },
-  { legenda: 'Ambientes novos ou reformas' },
+  {
+    legenda: "Sem barreiras de acesso",
+  },
+  {
+    legenda: "Elegância, conforto e segurança",
+  },
+  {
+    legenda: "Ambientes novos ou reformas",
+  },
+];
+
+const ESTATISTICAS = [
+  {
+    numero: "500+",
+    titulo: "Projetos",
+  },
+  {
+    numero: "98%",
+    titulo: "Satisfação",
+  },
+  {
+    numero: "6+",
+    titulo: "Anos",
+  },
 ];
 
 export function Gate() {
   const [convertido, setConvertido] = useState(
-    () => sessionStorage.getItem('box_lead_convertido') === 'true'
+    () => sessionStorage.getItem("box_lead_convertido") === "true"
   );
 
   useEffect(() => {
@@ -23,35 +44,45 @@ export function Gate() {
       <section className="gate__hero">
         <div className="gate__brand">
           <span className="gate__logo">B</span>
-          <span>Box Acessível</span>
+
+          <div>
+            <strong>Box Acessível</strong>
+          </div>
         </div>
 
-        <h1>
-          Solução de Acessibilidade
-          <br />
-          que Transforma Espaços
-        </h1>
+        <div className="gate__hero-content">
+          <h1>
+            Solução de
+            <br />
+            Acessibilidade
+            <br />
+            que Transforma
+            <br />
+            Espaços
+          </h1>
+
+          <p className="gate__subtitle">
+            Desenvolvemos soluções inteligentes em acessibilidade para
+            residências, empresas e empreendimentos, unindo segurança,
+            elegância e funcionalidade.
+          </p>
+        </div>
 
         <div className="gate__stats">
-          <div>
-            <strong>500+</strong>
-            <span>Projetos</span>
-          </div>
-
-          <div>
-            <strong>98%</strong>
-            <span>Satisfação</span>
-          </div>
-
-          <div>
-            <strong>6+</strong>
-            <span>Anos</span>
-          </div>
+          {ESTATISTICAS.map((item) => (
+            <div className="gate__stat" key={item.titulo}>
+              <strong>{item.numero}</strong>
+              <span>{item.titulo}</span>
+            </div>
+          ))}
         </div>
 
         <div className="gate__produtos">
           {PRODUTOS.map((produto) => (
-            <div className="gate__produto" key={produto.legenda}>
+            <div
+              className="gate__produto"
+              key={produto.legenda}
+            >
               <div
                 className="gate__produto-imagem"
                 aria-hidden="true"
@@ -88,15 +119,17 @@ export function Gate() {
 
       {!convertido ? (
         <aside className="gate__form-area">
-          <LeadForm onSucesso={() => setConvertido(true)} />
+          <LeadForm
+            onSucesso={() => setConvertido(true)}
+          />
         </aside>
       ) : (
         <aside className="gate__conteudo-liberado">
-          <h2>Conteúdo liberado, obrigado!</h2>
+          <h2>Conteúdo liberado!</h2>
 
           <p>
-            Troque este bloco pelo conteúdo real da Landing Page da Box
-            Acessível após a conversão do lead.
+            Aqui será carregada automaticamente a Landing Page completa
+            da Box Acessível após a conversão do lead.
           </p>
         </aside>
       )}

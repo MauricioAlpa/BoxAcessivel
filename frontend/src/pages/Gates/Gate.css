@@ -1,63 +1,382 @@
 .gate {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  background: var(--color-bg);
+  grid-template-columns: 1.1fr 0.9fr;
+  background: #f5f7fb;
 }
+
+/* ===========================
+   HERO
+=========================== */
 
 .gate__hero {
-  background: linear-gradient(160deg, var(--color-navy) 0%, var(--color-navy-light) 100%);
-  color: white;
-  padding: var(--space-4);
+  position: relative;
+  overflow: hidden;
+
+  background: linear-gradient(145deg,
+      #123d8c 0%,
+      #18489e 45%,
+      #0d2f74 100%);
+
+  color: #fff;
+
+  padding: 70px;
+
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 40px;
 }
 
-.gate__brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+/* Círculos decorativos */
+
+.gate__hero::before {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.05);
+  right: -170px;
+  top: -140px;
+}
+
+.gate__hero::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  left: -120px;
+  bottom: -120px;
+}
+
+/* ===========================
+   BRAND
+=========================== */
+
+.gate__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+  z-index: 2;
+}
 
 .gate__logo {
-  background: var(--color-orange);
-  width: 28px; height: 28px;
-  border-radius: 8px;
-  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px;
+  height: 46px;
+
+  border-radius: 14px;
+
+  background: #ff6b00;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 800;
+  font-size: 1.35rem;
+
+  box-shadow: 0 15px 35px rgba(255,107,0,.35);
 }
 
-.gate__hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; }
+/* ===========================
+   TÍTULO
+=========================== */
 
-.gate__stats { display: flex; gap: var(--space-3); }
-.gate__stats strong { display: block; color: var(--color-orange); font-size: 1.5rem; }
-.gate__stats span { font-size: 0.8rem; opacity: 0.8; }
-
-.gate__produtos { display: flex; gap: var(--space-2); flex-wrap: wrap; }
-.gate__produto { flex: 1 1 140px; }
-.gate__produto-imagem {
-  aspect-ratio: 1;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.15);
-  margin-bottom: 6px;
-}
-.gate__produto p { font-size: 0.8rem; opacity: 0.9; }
-
-.gate__social { display: flex; gap: var(--space-1); flex-wrap: wrap; margin-top: auto; }
-.gate__social a {
+.gate__hero h1 {
   color: white;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px 14px;
+
+  font-size: clamp(3rem, 5vw, 5rem);
+
+  line-height: 1.05;
+
+  letter-spacing: -2px;
+
+  font-weight: 800;
+
+  max-width: 700px;
+
+  z-index: 2;
+}
+
+.gate__hero h1::after {
+
+  content: "";
+
+  display: block;
+
+  width: 90px;
+
+  height: 6px;
+
   border-radius: 999px;
-  text-decoration: none;
-  font-size: 0.8rem;
-}
-.gate__whatsapp { background: var(--color-whatsapp) !important; font-weight: 600; }
 
-.gate__form-area, .gate__conteudo-liberado {
-  display: flex; align-items: center; justify-content: center; padding: var(--space-4);
-}
-.gate__conteudo-liberado {
-  flex-direction: column; text-align: center; gap: var(--space-2);
-  max-width: 480px; margin: 0 auto;
+  background: #ff6b00;
+
+  margin-top: 25px;
 }
 
-@media (max-width: 900px) {
-  .gate { grid-template-columns: 1fr; }
+.gate__subtitle{
+
+  max-width:650px;
+
+  font-size:1.15rem;
+
+  line-height:1.8;
+
+  color:rgba(255,255,255,.82);
+
+  z-index:2;
+}
+
+/* ===========================
+   ESTATÍSTICAS
+=========================== */
+
+.gate__stats {
+
+  display:flex;
+
+  gap:55px;
+
+  z-index:2;
+}
+
+.gate__stat{
+
+  display:flex;
+
+  flex-direction:column;
+}
+
+.gate__stat strong{
+
+  color:#ff6b00;
+
+  font-size:2.3rem;
+
+  font-weight:800;
+}
+
+.gate__stat span{
+
+  color:rgba(255,255,255,.75);
+
+  margin-top:5px;
+
+  font-size:.95rem;
+}
+
+/* ===========================
+   PRODUTOS
+=========================== */
+
+.gate__produtos{
+
+  display:flex;
+
+  gap:24px;
+
+  z-index:2;
+}
+
+.gate__produto{
+
+  flex:1;
+
+  transition:.35s;
+}
+
+.gate__produto:hover{
+
+  transform:translateY(-8px);
+}
+
+.gate__produto-imagem{
+
+  aspect-ratio:1;
+
+  border-radius:20px;
+
+  background:rgba(255,255,255,.12);
+
+  border:1px solid rgba(255,255,255,.08);
+
+  backdrop-filter:blur(10px);
+
+  transition:.35s;
+
+  margin-bottom:12px;
+}
+
+.gate__produto:hover .gate__produto-imagem{
+
+  background:rgba(255,255,255,.18);
+}
+
+.gate__produto p{
+
+  text-align:center;
+
+  color:rgba(255,255,255,.9);
+
+  line-height:1.5;
+
+  font-size:.92rem;
+}
+
+/* ===========================
+   REDES SOCIAIS
+=========================== */
+
+.gate__social{
+
+  margin-top:auto;
+
+  display:flex;
+
+  gap:14px;
+
+  flex-wrap:wrap;
+
+  z-index:2;
+}
+
+.gate__social a{
+
+  padding:12px 22px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.12);
+
+  color:white;
+
+  text-decoration:none;
+
+  transition:.3s;
+
+  font-weight:500;
+}
+
+.gate__social a:hover{
+
+  background:white;
+
+  color:#123d8c;
+
+  transform:translateY(-2px);
+}
+
+.gate__whatsapp{
+
+  background:#22c55e !important;
+
+  color:white !important;
+
+  font-weight:700;
+}
+
+/* ===========================
+   FORMULÁRIO
+=========================== */
+
+.gate__form-area,
+.gate__conteudo-liberado{
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  padding:60px;
+}
+
+.gate__conteudo-liberado{
+
+  flex-direction:column;
+
+  text-align:center;
+
+  max-width:550px;
+
+  margin:auto;
+
+  gap:20px;
+}
+
+/* ===========================
+   RESPONSIVO
+=========================== */
+
+@media(max-width:1200px){
+
+  .gate{
+
+    grid-template-columns:1fr;
+  }
+
+  .gate__hero{
+
+    padding:50px;
+  }
+
+  .gate__stats{
+
+    gap:30px;
+
+    flex-wrap:wrap;
+  }
+
+  .gate__produtos{
+
+    flex-wrap:wrap;
+  }
+
+}
+
+@media(max-width:768px){
+
+  .gate__hero{
+
+    padding:30px;
+  }
+
+  .gate__hero h1{
+
+    font-size:2.4rem;
+  }
+
+  .gate__subtitle{
+
+    font-size:1rem;
+  }
+
+  .gate__social{
+
+    flex-direction:column;
+  }
+
+  .gate__social a{
+
+    width:100%;
+
+    text-align:center;
+  }
+
+  .gate__produtos{
+
+    flex-direction:column;
+  }
+
+  .gate__stats{
+
+    justify-content:space-between;
+  }
+
 }
