@@ -113,8 +113,8 @@ Administrador acompanha no Dashboard
 ## Front-end
 
 * React
-* Next.js
-* Tailwind CSS
+* CSS
+* HTML
 * Framer Motion
 
 ## Back-end
