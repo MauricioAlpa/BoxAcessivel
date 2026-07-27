@@ -6,19 +6,6 @@ import { Sidebar } from '../../components/Shell/Sidebar';
 import { STATUSES } from '../../constants/leadStatus';
 import './Leads.css';
 
-/* ============================================================
-   Porte de "Leads Box Acessivel.dc.html" (Claude Design).
-
-   Ajustes ao backend real (ver relatório):
-   - "Importe sua base em minutos" removido a pedido.
-   - Colunas Origem e Responsável, e a linha de empresa sob o nome,
-     removidas: `lead` não tem essas colunas. Também saiu o chip
-     "Origem", que só poderia filtrar por um campo inexistente.
-   - "Última interação" vem de `atualizado_em`, que existe.
-   - "Alterar status" usa PATCH /leads/:id/status, que existe.
-   - Visualizar / Editar / Excluir só fecham o menu — sem endpoint.
-   ============================================================ */
-
 const LIGHT_VARS = {
   '--page': '#F4F6FB',
   '--surface': '#FFFFFF',
@@ -39,35 +26,18 @@ const LIGHT_VARS = {
 
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
 const POR_PAGINA = 20;
-
-/* Sem fonte no backend: o delta vs. período anterior e a meta.
-   Mesmos valores do design, como no Dashboard. */
-const DEMO = {
-  deltaTotal: '+8,1% vs. período anterior',
-  metaConversao: 'Meta de 35%',
-};
-
-/* Grid do design menos Origem (.8fr) e Responsável (.95fr). */
-const COLS = '1.7fr 1.05fr 1.5fr .95fr .7fr .9fr 44px';
+const COLS = '1.7fr 1.05fr 1.5fr 1.4fr .7fr .9fr';
 
 const STATUS_META = {
   '1. Novo Lead': { label: 'Novo lead', fg: 'var(--brand-2)', bg: 'color-mix(in srgb, var(--brand-2) 13%, transparent)' },
   '2. Em Contato': { label: 'Em contato', fg: 'var(--brand)', bg: 'color-mix(in srgb, var(--brand) 9%, transparent)' },
-  '3. Proposta Enviada': {
-    label: 'Proposta',
-    fg: 'var(--brand)',
-    bg: 'transparent',
-    border: '1px solid color-mix(in srgb, var(--brand-2) 40%, transparent)',
-    padding: '4px 9px',
-  },
+  '3. Proposta Enviada': { label: 'Proposta', fg: 'var(--brand)', bg: 'transparent', border: '1px solid color-mix(in srgb, var(--brand-2) 40%, transparent)' },
   '4. Negociando': { label: 'Negociação', fg: '#FFFFFF', bg: 'var(--brand-2)' },
   '5. Fechado': { label: 'Fechado', fg: 'var(--success-text)', bg: 'color-mix(in srgb, var(--success) 11%, transparent)' },
 };
 
 const FILTROS_STATUS = ['todos', ...STATUSES];
-
 const svgBase = { viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
-
 const nf = (dec = 0) => new Intl.NumberFormat('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
 function iniciais(nome) {
@@ -89,8 +59,6 @@ function dataCompleta(iso) {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
-/* "Última interação" no formato do design ("há 2 horas", "ontem"…),
-   derivada de atualizado_em. */
 function tempoRelativo(iso) {
   if (!iso) return '—';
   const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -146,21 +114,6 @@ const SKELETON = {
   animation: 'shimmer 1.4s linear infinite',
 };
 
-const MENU_ITEM = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '9px',
-  padding: '9px 10px',
-  border: 0,
-  background: 'transparent',
-  borderRadius: '9px',
-  fontFamily: 'inherit',
-  fontSize: '13px',
-  color: 'var(--txt)',
-  textAlign: 'left',
-  cursor: 'pointer',
-};
-
 function Ico({ children, size = 16, stroke = 'currentColor', width = 1.8 }) {
   return (
     <svg width={size} height={size} {...svgBase} stroke={stroke} strokeWidth={width}>
@@ -174,19 +127,17 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
   const raizRef = useRef(null);
 
   const [leads, setLeads] = useState([]);
-  const [fase, setFase] = useState('carregando'); // carregando | dados | erro
+  const [fase, setFase] = useState('carregando');
   const [collapsed, setCollapsed] = useState(sidebarCollapsed);
   const [query, setQuery] = useState('');
   const [statusIdx, setStatusIdx] = useState(0);
   const [maisRecentes, setMaisRecentes] = useState(true);
-  const [menu, setMenu] = useState(null);
-  const [menuPos, setMenuPos] = useState(null);
   const [pagina, setPagina] = useState(0);
   const [conversao, setConversao] = useState(0);
+  const [atualizandoId, setAtualizandoId] = useState(null);
 
   async function carregar() {
     setFase('carregando');
-    setMenu(null);
     try {
       const [dados, metrics] = await Promise.all([api.listarLeads(token), api.conversao(token)]);
       setLeads(dados);
@@ -201,9 +152,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
     let vivo = true;
     (async () => {
       try {
-        /* A taxa de conversão vem de /metrics/conversao (leads/visitas),
-           a mesma definição do Dashboard — senão o mesmo rótulo mostraria
-           números diferentes nas duas telas. */
         const [dados, metrics] = await Promise.all([api.listarLeads(token), api.conversao(token)]);
         if (!vivo) return;
         setLeads(dados);
@@ -226,20 +174,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
     };
   }, []);
 
-  /* Fecha o menu ao rolar ou redimensionar: ele é position:fixed,
-     posicionado a partir do getBoundingClientRect do botão. */
-  useEffect(() => {
-    if (menu === null) return;
-    const fechar = () => setMenu(null);
-    window.addEventListener('scroll', fechar, true);
-    window.addEventListener('resize', fechar);
-    return () => {
-      window.removeEventListener('scroll', fechar, true);
-      window.removeEventListener('resize', fechar);
-    };
-  }, [menu]);
-
-  /* Porte de runCounters(): dur 850, delay 100 + i*70. */
   useEffect(() => {
     if (fase !== 'dados' || !raizRef.current) return;
     const els = Array.from(raizRef.current.querySelectorAll('[data-count-to]'));
@@ -280,7 +214,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       pctBase: total ? Math.round((emContato / total) * 100) : 0,
       negociacao,
       fechados,
-
     };
   }, [leads]);
 
@@ -309,29 +242,19 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
   const isSemResultados = !isCarregando && !isErro && !isVazio && filtrados.length === 0;
   const mostraLinhas = !isCarregando && !isErro && !isVazio && !isSemResultados;
 
-  async function avancarStatus(lead) {
-    setMenu(null);
-    const i = STATUSES.indexOf(lead.status);
-    if (i < 0 || i >= STATUSES.length - 1) return;
-    const novo = STATUSES[i + 1];
-    const anterior = leads;
-    setLeads((atual) => atual.map((l) => (l.id === lead.id ? { ...l, status: novo, atualizado_em: new Date().toISOString() } : l)));
+  async function alterarStatus(idLead, novoStatus) {
+    setAtualizandoId(idLead);
+    const estadoAnterior = leads;
+    setLeads((atual) =>
+      atual.map((l) => (l.id === idLead ? { ...l, status: novoStatus, atualizado_em: new Date().toISOString() } : l))
+    );
     try {
-      await api.atualizarStatusLead(lead.id, novo, token);
+      await api.atualizarStatusLead(idLead, novoStatus, token);
     } catch {
-      setLeads(anterior);
+      setLeads(estadoAnterior);
+    } finally {
+      setAtualizandoId(null);
     }
-  }
-
-  function abrirMenu(e, lead) {
-    if (menu === lead.id) {
-      setMenu(null);
-      return;
-    }
-    const r = e.currentTarget.getBoundingClientRect();
-    const flip = window.innerHeight - r.bottom < 210;
-    setMenu(lead.id);
-    setMenuPos({ left: Math.max(12, r.right - 190), top: flip ? Math.max(12, r.top - 195) : r.bottom + 6 });
   }
 
   function limparFiltros() {
@@ -345,7 +268,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       rotulo: 'Total de leads',
       countTo: resumo.total,
       texto: nf().format(resumo.total),
-      nota: DEMO.deltaTotal,
       delay: 60,
       icone: (
         <Ico stroke="var(--brand-2)">
@@ -359,7 +281,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       rotulo: 'Novos hoje',
       countTo: resumo.novosHoje,
       texto: nf().format(resumo.novosHoje),
-      nota: `${nf().format(resumo.aguardam)} aguardam contato`,
       delay: 100,
       icone: (
         <Ico stroke="var(--brand-2)">
@@ -372,7 +293,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       rotulo: 'Em contato',
       countTo: resumo.emContato,
       texto: nf().format(resumo.emContato),
-      nota: `${resumo.pctBase}% da base`,
       delay: 140,
       icone: (
         <Ico stroke="var(--brand-2)">
@@ -386,7 +306,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       rotulo: 'Negociação',
       countTo: resumo.negociacao,
       texto: nf().format(resumo.negociacao),
-      nota: `${resumo.total ? Math.round((resumo.negociacao / resumo.total) * 100) : 0}% da base`,
       delay: 180,
       icone: (
         <Ico stroke="var(--brand-2)">
@@ -398,7 +317,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       rotulo: 'Fechados',
       countTo: resumo.fechados,
       texto: nf().format(resumo.fechados),
-      nota: `${resumo.total ? Math.round((resumo.fechados / resumo.total) * 100) : 0}% do total`,
       delay: 220,
       icone: (
         <Ico stroke="var(--success)" width={1.9}>
@@ -412,7 +330,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
       decimals: 1,
       suffix: '%',
       texto: `${nf(1).format(conversao)}%`,
-      nota: DEMO.metaConversao,
       delay: 260,
       icone: (
         <Ico stroke="var(--brand)">
@@ -460,16 +377,7 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
 
       <main style={{ flex: '1 1 auto', minWidth: 0, padding: '32px clamp(16px, 3.5vw, 48px) 64px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <header
-            style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              gap: '24px',
-              flexWrap: 'wrap',
-              animation: `riseIn 420ms ${EASE} both`,
-            }}
-          >
+          <header style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap', animation: `riseIn 420ms ${EASE} both` }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: 'var(--txt-3)', marginBottom: '10px' }}>
                 <Link to="/admin/dashboard" style={{ color: 'var(--txt-3)' }}>
@@ -487,7 +395,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
                 Gerencie todos os leads captados pela plataforma.
               </p>
             </div>
-            {/* "Exportar" e "Novo lead" removidos a pedido. */}
           </header>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,186px),1fr))', gap: '14px' }}>
@@ -512,29 +419,12 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
                 >
                   {c.texto}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--txt-3)' }}>{c.nota}</div>
               </div>
             ))}
           </section>
 
-          <section
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--line)',
-              borderRadius: '16px',
-              animation: `fadeIn 500ms ${EASE} 340ms both`,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                flexWrap: 'wrap',
-                padding: '18px 20px',
-                borderBottom: '1px solid var(--line-soft)',
-              }}
-            >
+          <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', animation: `fadeIn 500ms ${EASE} 340ms both` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '18px 20px', borderBottom: '1px solid var(--line-soft)' }}>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: '1 1 260px', minWidth: '220px' }}>
                 <svg width="16" height="16" {...svgBase} stroke="var(--txt-3)" style={{ position: 'absolute', left: '13px', pointerEvents: 'none' }}>
                   <circle cx="11" cy="11" r="7.5"></circle>
@@ -548,7 +438,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
                   onChange={(e) => {
                     setQuery(e.target.value);
                     setPagina(0);
-                    setMenu(null);
                   }}
                   style={{
                     width: '100%',
@@ -572,7 +461,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
                   onClick={() => {
                     setStatusIdx((i) => (i + 1) % FILTROS_STATUS.length);
                     setPagina(0);
-                    setMenu(null);
                   }}
                   style={{ ...CHIP, ...(statusIdx ? CHIP_ATIVO : null) }}
                 >
@@ -594,131 +482,27 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
               </div>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '16px',
-                flexWrap: 'wrap',
-                padding: '14px 20px',
-                borderBottom: '1px solid var(--line-soft)',
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', padding: '14px 20px', borderBottom: '1px solid var(--line-soft)' }}>
               <span style={{ fontSize: '13px', color: 'var(--txt-2)' }}>
                 {filtrados.length === 1 ? '1 lead encontrado' : `${nf().format(filtrados.length)} leads encontrados`}
               </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px', background: 'var(--line-soft)', borderRadius: '10px' }}>
-                <button
-                  type="button"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    height: '30px',
-                    padding: '0 11px',
-                    border: 0,
-                    borderRadius: '8px',
-                    background: 'var(--surface)',
-                    color: 'var(--txt)',
-                    fontFamily: 'inherit',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 2px rgba(27,33,64,0.08)',
-                  }}
-                >
-                  <Ico size={14} width={1.9}>
-                    <path d="M3 6h18"></path>
-                    <path d="M3 12h18"></path>
-                    <path d="M3 18h18"></path>
-                  </Ico>
-                  Tabela
-                </button>
-                {[
-                  {
-                    label: 'Cards',
-                    icone: (
-                      <>
-                        <rect x="3" y="3" width="7" height="7" rx="1.6"></rect>
-                        <rect x="14" y="3" width="7" height="7" rx="1.6"></rect>
-                        <rect x="3" y="14" width="7" height="7" rx="1.6"></rect>
-                        <rect x="14" y="14" width="7" height="7" rx="1.6"></rect>
-                      </>
-                    ),
-                  },
-                  {
-                    label: 'Kanban',
-                    icone: (
-                      <>
-                        <rect x="3" y="4" width="5" height="16" rx="1.6"></rect>
-                        <rect x="10" y="4" width="5" height="11" rx="1.6"></rect>
-                        <rect x="17" y="4" width="4" height="7" rx="1.6"></rect>
-                      </>
-                    ),
-                  },
-                ].map((v) => (
-                  <button
-                    key={v.label}
-                    type="button"
-                    title="Em breve"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      height: '30px',
-                      padding: '0 11px',
-                      border: 0,
-                      borderRadius: '8px',
-                      background: 'transparent',
-                      color: 'var(--txt-3)',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                      cursor: 'not-allowed',
-                      opacity: 0.7,
-                    }}
-                  >
-                    <Ico size={14} width={1.9}>
-                      {v.icone}
-                    </Ico>
-                    {v.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div style={{ overflowX: 'auto' }}>
               <div data-table-min="true" style={{ minWidth: '900px' }}>
-                <div
-                  data-head="true"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: COLS,
-                    gap: '14px',
-                    padding: '11px 20px',
-                    borderBottom: '1px solid var(--line-soft)',
-                    fontSize: '11px',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--txt-3)',
-                  }}
-                >
+                <div data-head="true" style={{ display: 'grid', gridTemplateColumns: COLS, gap: '14px', padding: '11px 20px', borderBottom: '1px solid var(--line-soft)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--txt-3)' }}>
                   <span>Lead</span>
                   <span data-col="secondary">Telefone</span>
                   <span>E-mail</span>
                   <span>Status</span>
                   <span>Cadastro</span>
                   <span data-col="secondary">Última interação</span>
-                  <span></span>
                 </div>
 
                 {isCarregando && (
                   <div style={{ padding: '8px 0' }}>
                     {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <div
-                        key={n}
-                        style={{ display: 'grid', gridTemplateColumns: COLS, gap: '14px', padding: '15px 20px', alignItems: 'center' }}
-                      >
+                      <div key={n} style={{ display: 'grid', gridTemplateColumns: COLS, gap: '14px', padding: '15px 20px', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
                           <div style={{ width: '34px', height: '34px', borderRadius: '999px', ...SKELETON }}></div>
                           <div style={{ flex: 1, height: '12px', borderRadius: '6px', ...SKELETON }}></div>
@@ -728,7 +512,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
                         <div style={{ height: '22px', borderRadius: '999px', ...SKELETON }}></div>
                         <div style={{ height: '12px', borderRadius: '6px', ...SKELETON }}></div>
                         <div style={{ height: '12px', borderRadius: '6px', ...SKELETON }}></div>
-                        <div></div>
                       </div>
                     ))}
                   </div>
@@ -738,194 +521,57 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
                   <div>
                     {visiveis.map((l) => {
                       const st = STATUS_META[l.status] ?? STATUS_META['1. Novo Lead'];
-                      const ultimo = STATUSES.indexOf(l.status) === STATUSES.length - 1;
+                      const estaAtualizando = atualizandoId === l.id;
                       return (
-                        <div
-                          key={l.id}
-                          data-row="true"
-                          className="l-row"
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: COLS,
-                            gap: '14px',
-                            padding: '15px 20px',
-                            alignItems: 'center',
-                            borderBottom: '1px solid var(--line-soft)',
-                            transition: `background 160ms ${EASE}`,
-                            animation: `fadeIn 320ms ${EASE} both`,
-                          }}
-                        >
+                        <div key={l.id} data-row="true" className="l-row" style={{ display: 'grid', gridTemplateColumns: COLS, gap: '14px', padding: '15px 20px', alignItems: 'center', borderBottom: '1px solid var(--line-soft)', transition: `background 160ms ${EASE}`, animation: `fadeIn 320ms ${EASE} both` }}>
                           <div data-cell="name" style={{ display: 'flex', alignItems: 'center', gap: '11px', minWidth: 0 }}>
-                            <div
-                              style={{
-                                width: '34px',
-                                height: '34px',
-                                flex: '0 0 auto',
-                                borderRadius: '999px',
-                                background: 'color-mix(in srgb, var(--brand) 9%, transparent)',
-                                color: 'var(--brand)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                              }}
-                            >
+                            <div style={{ width: '34px', height: '34px', flex: '0 0 auto', borderRadius: '999px', background: 'color-mix(in srgb, var(--brand) 9%, transparent)', color: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600 }}>
                               {iniciais(l.nome)}
                             </div>
                             <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontSize: '14px',
-                                  fontWeight: 500,
-                                  color: 'var(--txt)',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
+                              <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {l.nome}
                               </div>
                             </div>
                           </div>
-                          <span
-                            data-cell="phone"
-                            data-label="Telefone"
-                            data-col="secondary"
-                            style={{ fontSize: '13px', color: 'var(--txt-2)', fontVariantNumeric: 'tabular-nums' }}
-                          >
+                          <span data-cell="phone" data-label="Telefone" data-col="secondary" style={{ fontSize: '13px', color: 'var(--txt-2)', fontVariantNumeric: 'tabular-nums' }}>
                             {formatarTelefone(l.telefone)}
                           </span>
-                          <span
-                            data-cell="email"
-                            data-label="E-mail"
-                            style={{ fontSize: '13px', color: 'var(--txt-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                          >
+                          <span data-cell="email" data-label="E-mail" style={{ fontSize: '13px', color: 'var(--txt-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {l.email}
                           </span>
-                          <span
-                            data-cell="status"
-                            data-label="Status"
-                            style={{
-                              justifySelf: 'start',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              color: st.fg,
-                              background: st.bg,
-                              ...(st.border ? { border: st.border } : null),
-                              padding: st.padding ?? '5px 10px',
-                              borderRadius: '999px',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {st.label}
-                          </span>
-                          <span
-                            data-cell="created"
-                            data-label="Cadastro"
-                            style={{ fontSize: '13px', color: 'var(--txt-3)', fontVariantNumeric: 'tabular-nums' }}
-                          >
-                            {dataCompleta(l.criado_em)}
-                          </span>
-                          <span
-                            data-cell="last"
-                            data-label="Última interação"
-                            data-col="secondary"
-                            style={{ fontSize: '13px', color: 'var(--txt-3)' }}
-                          >
-                            {tempoRelativo(l.atualizado_em)}
-                          </span>
-                          <div data-cell="actions" style={{ position: 'relative', justifySelf: 'end' }}>
-                            <button
-                              type="button"
-                              className="l-acoes"
-                              onClick={(e) => abrirMenu(e, l)}
-                              aria-label="Ações do lead"
+                          <div data-cell="status" data-label="Status" style={{ justifySelf: 'start' }}>
+                            <select
+                              value={l.status}
+                              disabled={estaAtualizando}
+                              onChange={(e) => alterarStatus(l.id, e.target.value)}
                               style={{
-                                width: '30px',
-                                height: '30px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: 0,
-                                background: 'transparent',
-                                borderRadius: '8px',
-                                color: 'var(--txt-3)',
-                                cursor: 'pointer',
-                                transition: `all 160ms ${EASE}`,
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: st.fg,
+                                background: st.bg,
+                                ...(st.border ? { border: st.border } : { border: '1px solid transparent' }),
+                                padding: '4px 8px',
+                                borderRadius: '999px',
+                                cursor: estaAtualizando ? 'wait' : 'pointer',
+                                outline: 'none',
+                                fontFamily: 'inherit',
+                                opacity: estaAtualizando ? 0.6 : 1,
                               }}
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="5" cy="12" r="1.6"></circle>
-                                <circle cx="12" cy="12" r="1.6"></circle>
-                                <circle cx="19" cy="12" r="1.6"></circle>
-                              </svg>
-                            </button>
-                            {menu === l.id && (
-                              <div
-                                style={{
-                                  position: 'fixed',
-                                  zIndex: 60,
-                                  width: '190px',
-                                  background: 'var(--surface)',
-                                  border: '1px solid var(--line)',
-                                  borderRadius: '12px',
-                                  boxShadow: '0 12px 32px rgba(27,33,64,0.14)',
-                                  padding: '6px',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: '2px',
-                                  animation: `fadeIn 160ms ${EASE} both`,
-                                  left: menuPos ? `${menuPos.left}px` : '-9999px',
-                                  top: menuPos ? `${menuPos.top}px` : 0,
-                                }}
-                              >
-                                <button type="button" className="l-menu-item" onClick={() => setMenu(null)} style={MENU_ITEM}>
-                                  <Ico size={15} stroke="var(--txt-2)">
-                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                  </Ico>
-                                  Visualizar
-                                </button>
-                                <button type="button" className="l-menu-item" onClick={() => setMenu(null)} style={MENU_ITEM}>
-                                  <Ico size={15} stroke="var(--txt-2)">
-                                    <path d="M12 20h9"></path>
-                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path>
-                                  </Ico>
-                                  Editar
-                                </button>
-                                <button
-                                  type="button"
-                                  className="l-menu-item"
-                                  onClick={() => avancarStatus(l)}
-                                  disabled={ultimo}
-                                  style={{ ...MENU_ITEM, ...(ultimo ? { color: 'var(--txt-3)', cursor: 'not-allowed' } : null) }}
-                                >
-                                  <Ico size={15} stroke="var(--txt-2)">
-                                    <path d="m16 3 4 4-4 4"></path>
-                                    <path d="M20 7H4"></path>
-                                    <path d="m8 21-4-4 4-4"></path>
-                                    <path d="M4 17h16"></path>
-                                  </Ico>
-                                  Alterar status
-                                </button>
-                                <div style={{ height: '1px', background: 'var(--line-soft)', margin: '4px 2px' }}></div>
-                                <button
-                                  type="button"
-                                  className="l-menu-excluir"
-                                  onClick={() => setMenu(null)}
-                                  style={{ ...MENU_ITEM, color: 'var(--danger)' }}
-                                >
-                                  <Ico size={15}>
-                                    <path d="M3 6h18"></path>
-                                    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path>
-                                    <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"></path>
-                                  </Ico>
-                                  Excluir
-                                </button>
-                              </div>
-                            )}
+                              {STATUSES.map((statusOpcao) => (
+                                <option key={statusOpcao} value={statusOpcao} style={{ color: '#1B2140', background: '#FFFFFF' }}>
+                                  {STATUS_META[statusOpcao]?.label || statusOpcao}
+                                </option>
+                              ))}
+                            </select>
                           </div>
+                          <span data-cell="created" data-label="Cadastro" style={{ fontSize: '13px', color: 'var(--txt-3)', fontVariantNumeric: 'tabular-nums' }}>
+                            {dataCompleta(l.criado_em)}
+                          </span>
+                          <span data-cell="last" data-label="Última interação" data-col="secondary" style={{ fontSize: '13px', color: 'var(--txt-3)' }}>
+                            {tempoRelativo(l.atualizado_em)}
+                          </span>
                         </div>
                       );
                     })}
@@ -951,9 +597,6 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '56px 24px', animation: `fadeIn 300ms ${EASE} both` }}>
                 <div style={{ width: '132px', height: '132px', borderRadius: '16px', overflow: 'hidden', background: 'var(--line-soft)', marginBottom: '12px' }}></div>
                 <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--txt)' }}>Nenhum lead cadastrado</div>
-                {/* O texto do design citava "cadastre o primeiro lead ou
-                    importe sua base" — as duas ações foram removidas, então
-                    aponta pra origem real dos leads. */}
                 <p style={{ margin: 0, fontSize: '14px', color: 'var(--txt-2)', maxWidth: '340px', textAlign: 'center', lineHeight: 1.5 }}>
                   Os leads aparecem aqui conforme forem captados pela página pública.
                 </p>
@@ -977,21 +620,7 @@ export function Leads({ accent = '#2F3E7E', sidebarCollapsed = false }) {
               </div>
             )}
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '16px',
-                flexWrap: 'wrap',
-                padding: '14px 20px',
-                borderTop: '1px solid var(--line-soft)',
-                fontSize: '13px',
-                color: 'var(--txt-3)',
-              }}
-            >
-              {/* O design mostra "Mostrando {filtrados} de {total} leads". Com
-                  paginação real esse texto ficaria errado, então virou faixa. */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', padding: '14px 20px', borderTop: '1px solid var(--line-soft)', fontSize: '13px', color: 'var(--txt-3)' }}>
               <span>
                 {mostraLinhas
                   ? `Mostrando ${nf().format(paginaAtual * POR_PAGINA + 1)}–${nf().format(

@@ -5,44 +5,6 @@ import { api } from '../../api/client';
 import { Sidebar } from '../../components/Shell/Sidebar';
 import './Dashboard.css';
 
-/* ============================================================
-   Porte 1:1 de "Dashboard Box Acessivel.dc.html" (Claude Design).
-
-   Estrutura, ordem dos nós, tokens, espaçamentos, raios, sombras,
-   tipografia, animações e hovers são os do design. A DCLogic do
-   design (state period/collapsed/hover, geometry(), runCounters())
-   foi portada para hooks sem alterar o HTML gerado.
-
-   Props espelham as declaradas no data-props do design, com os
-   mesmos defaults: dark=false, accent=#2F3E7E,
-   sidebarCollapsed=false, defaultPeriod='7d'.
-   ============================================================ */
-
-/* --- Métricas que o backend não modela ------------------------
-   O design as exibe; a API (metrics/conversao + leads) não as
-   fornece. Mantidas com os valores literais do design para não
-   alterar o render. Substituir quando existirem no backend.       */
-const DEMO = {
-  deltaVisitas: '12,4%',
-  visitasAnterior: '2.884 no período anterior',
-  deltaLeads: '8,1%',
-  leadsAnterior: '991 no período anterior',
-  deltaConversao: '1,3%',
-  conversaoAnterior: '34,4% no período anterior',
-  metaConversao: '35%',
-  conversaoAnteriorCurto: '34,4%',
-  usuarioNome: 'Carla Mendes',
-  usuarioCargo: 'Comercial',
-  usuarioIniciais: 'CM',
-};
-
-/* Tokens de design_handoff_box_acessivel/tokens.css, declarado no README
-   como fonte única. Cinco deles divergem do que está inline no
-   .dc.html do Dashboard, que ficou defasado: --page (#F7F9FB),
-   --line (#E9EDF1), --line-soft (#F1F4F7), --txt-2 (#5A6774) e
-   --txt-3 (#8A95A0). O Login já usa os valores novos; manter os
-   antigos aqui faria o fundo da página saltar ao navegar entre as
-   duas telas. Ver relatório. */
 const LIGHT_VARS = {
   '--page': '#F4F6FB',
   '--surface': '#FFFFFF',
@@ -56,7 +18,6 @@ const LIGHT_VARS = {
   '--side-line': 'rgba(255,255,255,0.14)',
 };
 
-/* Não mudam com o tema. */
 const FIXED_VARS = {
   '--brand-2': '#5566AE',
   '--brand-deep': '#1F2A5A',
@@ -65,57 +26,14 @@ const FIXED_VARS = {
   '--danger': '#CE181E',
 };
 
-const DARK_VARS = {
-  '--page': '#0A0F14',
-  '--surface': '#141B22',
-  '--line': '#242D36',
-  '--line-soft': '#1B242C',
-  '--txt': '#EDF1F5',
-  '--txt-2': '#9BA7B3',
-  '--txt-3': '#6E7A85',
-  '--side': '#141A38',
-  '--side-fg': '#A9B2D6',
-  '--side-line': 'rgba(255,255,255,0.08)',
-};
-
-
-/* Status do funil (constants/leadStatus.js) → rótulo e cores do design. */
-/* v2 dá uma variante distinta a cada etapa: preenchimento suave (Novo
-   lead, Em contato), contorno sem fundo (Proposta), preenchimento sólido
-   (Negociação). "Fechado" é a única que mantém a cor semântica verde.
-   Proposta é a única com padding 4px 9px — as outras seguem 5px 10px. */
 const STATUS_META = {
-  '1. Novo Lead': {
-    label: 'Novo lead',
-    fg: 'var(--brand-2)',
-    bg: 'color-mix(in srgb, var(--brand-2) 13%, transparent)',
-  },
-  '2. Em Contato': {
-    label: 'Em contato',
-    fg: 'var(--brand)',
-    bg: 'color-mix(in srgb, var(--brand) 9%, transparent)',
-  },
-  '3. Proposta Enviada': {
-    label: 'Proposta',
-    fg: 'var(--brand)',
-    bg: 'transparent',
-    border: '1px solid color-mix(in srgb, var(--brand-2) 40%, transparent)',
-    padding: '4px 9px',
-  },
-  '4. Negociando': {
-    label: 'Negociação',
-    fg: '#FFFFFF',
-    bg: 'var(--brand-2)',
-  },
-  '5. Fechado': {
-    label: 'Fechado',
-    fg: 'var(--success-text)',
-    bg: 'color-mix(in srgb, var(--success) 11%, transparent)',
-  },
+  '1. Novo Lead': { label: 'Novo lead', fg: 'var(--brand-2)', bg: 'color-mix(in srgb, var(--brand-2) 13%, transparent)' },
+  '2. Em Contato': { label: 'Em contato', fg: 'var(--brand)', bg: 'color-mix(in srgb, var(--brand) 9%, transparent)' },
+  '3. Proposta Enviada': { label: 'Proposta', fg: 'var(--brand)', bg: 'transparent', border: '1px solid color-mix(in srgb, var(--brand-2) 40%, transparent)', padding: '4px 9px' },
+  '4. Negociando': { label: 'Negociação', fg: '#FFFFFF', bg: 'var(--brand-2)' },
+  '5. Fechado': { label: 'Fechado', fg: 'var(--success-text)', bg: 'color-mix(in srgb, var(--success) 11%, transparent)' },
 };
 
-/* v2: rampa monocromática, de --brand (topo) até um --brand-2 bem
-   diluído (base), em vez do gradiente azul→ciano→laranja do v1. */
 const FUNIL = [
   { status: '1. Novo Lead', label: 'Novo lead', fill: 'var(--brand)', delay: 460 },
   { status: '2. Em Contato', label: 'Em contato', fill: 'color-mix(in srgb, var(--brand) 70%, var(--brand-2))', delay: 520 },
@@ -124,9 +42,6 @@ const FUNIL = [
   { status: '5. Fechado', label: 'Fechado', fill: 'color-mix(in srgb, var(--brand-2) 38%, #FFFFFF)', delay: 700 },
 ];
 
-/* Paleta de avatar ciclada por índice de linha. No v2 o ciclo é
-   brand 14% → brand 10% → brand-2 16% → brand 10%, o que reproduz as
-   6 linhas do design (índices 4 e 5 reentram em 0 e 1). */
 const AVATARES = [
   { bg: 'color-mix(in srgb, var(--brand) 14%, transparent)', fg: 'var(--brand)' },
   { bg: 'color-mix(in srgb, var(--brand) 10%, transparent)', fg: 'var(--brand)' },
@@ -135,11 +50,10 @@ const AVATARES = [
 ];
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
-const GRID_COLS = '1.5fr 1fr 1.5fr 1fr .8fr 44px';
+const GRID_COLS = '1.5fr 1fr 1.5fr 1fr .8fr';
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
 
-const nf = (dec) => new Intl.NumberFormat('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const nf = (dec = 0) => new Intl.NumberFormat('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
 function ymdLocal(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -168,9 +82,6 @@ function iniciais(nome) {
   return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
 }
 
-/* Porte exato de geometry() da DCLogic do design.
-   O `|| 1` no max é a única mudança: com dados reais a série pode
-   ser toda zero, e o original dividiria por zero. */
 function geometry(values) {
   const W = 600;
   const H = 180;
@@ -197,11 +108,7 @@ function geometry(values) {
   return { pts, line: d, area: d + ' L600,196 L0,196 Z', H: 196 };
 }
 
-/* Substitui o SERIES estático do design pelos cadastros reais,
-   mantendo as mesmas formas: 7d = 7 pontos diários com rótulo por
-   ponto; 30d = 30 pontos diários com 6 rótulos esparsos;
-   90d = 13 pontos semanais com rótulos de mês. */
-function buildSeries(leads, period) {
+function buildSeries(leads) {
   const porDia = new Map();
   leads.forEach((l) => {
     const k = ymdLocal(new Date(l.criado_em));
@@ -210,55 +117,17 @@ function buildSeries(leads, period) {
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
-  const diaAtras = (n) => {
-    const d = new Date(hoje);
-    d.setDate(d.getDate() - n);
-    return d;
-  };
-
-  if (period === '90d') {
-    const buckets = [];
-    for (let i = 12; i >= 0; i--) {
-      const inicio = diaAtras(i * 7 + 6);
-      let total = 0;
-      for (let k = 0; k < 7; k++) {
-        const d = new Date(inicio);
-        d.setDate(d.getDate() + k);
-        total += porDia.get(ymdLocal(d)) || 0;
-      }
-      buckets.push({ inicio, total });
-    }
-    const labels = [];
-    buckets.forEach((b) => {
-      const m = MESES[b.inicio.getMonth()];
-      if (labels[labels.length - 1] !== m) labels.push(m);
-    });
-    return {
-      label: 'Últimos 90 dias',
-      values: buckets.map((b) => b.total),
-      labels,
-      pointLabels: buckets.map((b) => `Sem. ${diaMes(b.inicio)}`),
-    };
-  }
-
-  const n = period === '30d' ? 30 : 7;
   const dias = [];
-  for (let i = n - 1; i >= 0; i--) dias.push(diaAtras(i));
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(hoje);
+    d.setDate(d.getDate() - i);
+    dias.push(d);
+  }
   const values = dias.map((d) => porDia.get(ymdLocal(d)) || 0);
   const pointLabels = dias.map(diaMes);
 
-  if (period === '30d') {
-    return {
-      label: 'Últimos 30 dias',
-      values,
-      labels: [0, 6, 12, 18, 24, 29].map((i) => pointLabels[i]),
-      pointLabels,
-    };
-  }
   return { label: 'Últimos 7 dias', values, labels: pointLabels, pointLabels };
 }
-
-/* --- ícones ------------------------------------------------- */
 
 const svgBase = {
   viewBox: '0 0 24 24',
@@ -268,49 +137,7 @@ const svgBase = {
   strokeLinejoin: 'round',
 };
 
-/* No design o ícone da nav tem style="flex:0 0 auto"; o do KPI não. */
-function IcoUsers({ size = 18, stroke = 'currentColor', semFlex = false }) {
-  return (
-    <svg width={size} height={size} {...svgBase} stroke={stroke} style={semFlex ? undefined : { flex: '0 0 auto' }}>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
-  );
-}
-
-function IcoTendencia({ subindo }) {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-      {subindo ? (
-        <>
-          <path d="M16 7h6v6"></path>
-          <path d="m22 7-8.5 8.5-5-5L2 17"></path>
-        </>
-      ) : (
-        <>
-          <path d="M16 17h6v-6"></path>
-          <path d="m22 17-8.5-8.5-5 5L2 7"></path>
-        </>
-      )}
-    </svg>
-  );
-}
-
-function IcoMais() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="5" cy="12" r="1.6"></circle>
-      <circle cx="12" cy="12" r="1.6"></circle>
-      <circle cx="19" cy="12" r="1.6"></circle>
-    </svg>
-  );
-}
-
-/* --- blocos reutilizados ------------------------------------ */
-
-function KpiCard({ icone, icoBg, delta, subindo, countTo, decimals, prefix, suffix, valorTexto, rotulo, rodape, delay }) {
+function KpiCard({ icone, icoBg, countTo, decimals, prefix, suffix, valorTexto, rotulo, delay }) {
   return (
     <div
       className="h-kpi"
@@ -340,24 +167,6 @@ function KpiCard({ icone, icoBg, delta, subindo, countTo, decimals, prefix, suff
         >
           {icone}
         </div>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '3px',
-            fontSize: '12px',
-            fontWeight: 600,
-            color: subindo ? 'var(--success)' : 'var(--danger)',
-            background: subindo
-              ? 'color-mix(in srgb, var(--success) 10%, transparent)'
-              : 'color-mix(in srgb, var(--danger) 9%, transparent)',
-            padding: '4px 8px',
-            borderRadius: '999px',
-          }}
-        >
-          <IcoTendencia subindo={subindo} />
-          {delta}
-        </span>
       </div>
       <div>
         <div
@@ -377,9 +186,6 @@ function KpiCard({ icone, icoBg, delta, subindo, countTo, decimals, prefix, suff
           {valorTexto}
         </div>
         <div style={{ fontSize: '14px', color: 'var(--txt-2)', marginTop: '2px' }}>{rotulo}</div>
-      </div>
-      <div style={{ fontSize: '12px', color: 'var(--txt-3)', borderTop: '1px solid var(--line-soft)', paddingTop: '12px' }}>
-        {rodape}
       </div>
     </div>
   );
@@ -403,21 +209,16 @@ const CARD_TITULO = {
 };
 
 const CARD_SUB = { margin: 0, fontSize: '13px', color: 'var(--txt-3)' };
-
 const CELULA_TXT2 = { fontSize: '13px', color: 'var(--txt-2)' };
 const CELULA_ELIPSE = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
 
-/* ============================================================ */
-
-export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed = false, defaultPeriod = '7d' }) {
+export function Dashboard({ accent = '#2F3E7E', sidebarCollapsed = false }) {
   const { token } = useAuth();
   const raizRef = useRef(null);
 
   const [metrics, setMetrics] = useState(null);
   const [leads, setLeads] = useState([]);
   const [erro, setErro] = useState('');
-
-  const period = defaultPeriod;
   const [collapsed, setCollapsed] = useState(sidebarCollapsed);
   const [hover, setHover] = useState(null);
 
@@ -439,12 +240,9 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
     };
   }, [token]);
 
-  /* helmet: html, body { background: var(--bg-2) }. Aplicado por
-     efeito porque o CSS aqui é global numa SPA e vazaria pra
-     Gate/Login. */
   useEffect(() => {
     const anterior = document.body.style.background;
-    document.body.style.background = 'var(--bg-2)';
+    document.body.style.background = '#F4F6FB';
     return () => {
       document.body.style.background = anterior;
     };
@@ -452,9 +250,6 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
 
   const carregado = metrics !== null;
 
-  /* Porte de runCounters(): mesma duração, easing, delays e
-     formatação. Roda quando os dados chegam (equivalente ao
-     componentDidMount do design, que já tinha os dados). */
   useEffect(() => {
     if (!carregado || !raizRef.current) return;
     const els = Array.from(raizRef.current.querySelectorAll('[data-count-to]'));
@@ -479,31 +274,20 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
     return () => rafs.forEach((id) => cancelAnimationFrame(id));
   }, [carregado]);
 
-  const serie = useMemo(() => buildSeries(leads, period), [leads, period]);
+  const serie = useMemo(() => buildSeries(leads), [leads]);
   const g = useMemo(() => geometry(serie.values), [serie]);
-
   const hp = hover === null ? null : g.pts[hover];
 
   const totalVisitas = metrics?.totalVisitas ?? 0;
   const totalLeads = metrics?.totalLeads ?? 0;
   const taxaConversao = metrics?.taxaConversao ?? 0;
 
-  /* Funil cumulativo, como no design: a etapa N conta todo lead que
-     chegou até ela ou passou dela, então a primeira barra é sempre o
-     total (100%) e as barras decrescem monotonicamente
-     (1.072 / 742 / 407 / 203 / 57 no design). Contar leads parados em
-     cada status daria uma forma arbitrária, fora do design. */
   const funil = useMemo(() => {
     const contagem = FUNIL.map((f, i) => ({
       ...f,
       total: leads.filter((l) => FUNIL.findIndex((x) => x.status === l.status) >= i).length,
     }));
     const total = contagem[0].total || 1;
-    /* Larguras como no design: porcentagem inteira (100/69/38/19) e piso
-       de 9% na etapa final. O design fixa width:9% no "Fechado" mesmo
-       rotulando 5,3% — abaixo disso a barra tem menos que os 2×8px de
-       border-radius e colapsa num toco. O piso preserva isso; etapa
-       zerada continua sem barra. */
     return contagem.map((c) => ({
       ...c,
       pct: c.total === 0 ? 0 : Math.max(9, Math.round((c.total / total) * 100)),
@@ -512,10 +296,8 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
 
   const fechados = funil[funil.length - 1].total;
   const taxaFechamento = totalLeads > 0 ? (fechados / totalLeads) * 100 : 0;
-
   const recentes = useMemo(() => leads.slice(0, 6), [leads]);
 
-  /* Circunferência do anel: 2π·64 ≈ 402, como no dasharray do design. */
   const anelTotal = 402;
   const anelPreenchido = (Math.min(100, Math.max(0, taxaConversao)) / 100) * anelTotal;
 
@@ -525,7 +307,6 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
       className="dc-page"
       style={{
         ...LIGHT_VARS,
-        ...(dark ? DARK_VARS : null),
         ...FIXED_VARS,
         '--brand': accent,
         display: 'flex',
@@ -541,72 +322,12 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
 
       <main style={{ flex: '1 1 auto', minWidth: 0, padding: '36px clamp(20px, 3.5vw, 48px) 64px' }}>
         <div style={{ maxWidth: '1360px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <header
-            style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              gap: '24px',
-              flexWrap: 'wrap',
-              animation: `riseIn 420ms ${EASE} both`,
-            }}
-          >
+          <header style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap', animation: `riseIn 420ms ${EASE} both` }}>
             <div>
-              <h1
-                style={{
-                  margin: '0 0 6px',
-                  fontSize: '32px',
-                  fontWeight: 600,
-                  letterSpacing: '-0.03em',
-                  lineHeight: 1.15,
-                  color: 'var(--txt)',
-                }}
-              >
+              <h1 style={{ margin: '0 0 6px', fontSize: '32px', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.15, color: 'var(--txt)' }}>
                 Dashboard
               </h1>
               <p style={{ margin: 0, fontSize: '15px', color: 'var(--txt-2)', lineHeight: 1.4 }}>Visão geral da operação</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              {/* Filtros de período e ícone de notificação removidos a pedido.
-                  O gráfico segue na janela de 7 dias (prop defaultPeriod). */}
-              <div
-                className="h-user"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '4px 12px 4px 4px',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--line)',
-                  borderRadius: '999px',
-                  cursor: 'pointer',
-                  transition: `border-color 160ms ${EASE}`,
-                }}
-              >
-                <div
-                  style={{
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '999px',
-                    background: 'var(--brand)',
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                  }}
-                >
-                  {DEMO.usuarioIniciais}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                  <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--txt)' }}>{DEMO.usuarioNome}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--txt-3)' }}>{DEMO.usuarioCargo}</span>
-                </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--txt-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m6 9 6 6 6-6"></path>
-                </svg>
-              </div>
             </div>
           </header>
 
@@ -625,29 +346,26 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
                 </svg>
               }
               icoBg="color-mix(in srgb, var(--brand) 12%, transparent)"
-              delta={DEMO.deltaVisitas}
-              subindo
               countTo={totalVisitas}
               decimals={0}
-              prefix=""
-              suffix=""
-              valorTexto={nf(0).format(totalVisitas)}
+              valorTexto={nf().format(totalVisitas)}
               rotulo="Total de visitas"
-              rodape={DEMO.visitasAnterior}
               delay={60}
             />
             <KpiCard
-              icone={<IcoUsers stroke="var(--brand-2)" semFlex />}
+              icone={
+                <svg width="18" height="18" {...svgBase} stroke="var(--brand-2)">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              }
               icoBg="color-mix(in srgb, var(--brand-2) 14%, transparent)"
-              delta={DEMO.deltaLeads}
-              subindo
               countTo={totalLeads}
               decimals={0}
-              prefix=""
-              suffix=""
-              valorTexto={nf(0).format(totalLeads)}
+              valorTexto={nf().format(totalLeads)}
               rotulo="Leads captados"
-              rodape={DEMO.leadsAnterior}
               delay={120}
             />
             <KpiCard
@@ -659,20 +377,13 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
                 </svg>
               }
               icoBg="color-mix(in srgb, var(--brand) 10%, transparent)"
-              delta={DEMO.deltaConversao}
-              subindo={false}
               countTo={taxaConversao}
               decimals={1}
-              prefix=""
               suffix="%"
               valorTexto={`${nf(1).format(taxaConversao)}%`}
               rotulo="Taxa de conversão"
-              rodape={DEMO.conversaoAnterior}
               delay={180}
             />
-            {/* "Receita estimada" removido: nada monetário existe no banco
-                (lead não tem valor, não há produto nem contrato), então o
-                card só podia ser mock. */}
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,400px),1fr))', gap: '16px' }}>
@@ -688,18 +399,7 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
                 </div>
               </div>
               <div style={{ position: 'relative', height: '196px' }} onMouseLeave={() => setHover(null)}>
-                <svg
-                  viewBox="0 0 600 196"
-                  preserveAspectRatio="none"
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    overflow: 'visible',
-                    animation: `fadeIn 600ms ${EASE} 340ms both`,
-                  }}
-                >
+                <svg viewBox="0 0 600 196" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', animation: `fadeIn 600ms ${EASE} 340ms both` }}>
                   <defs>
                     <linearGradient id="evoFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.22"></stop>
@@ -711,61 +411,16 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
                   <line x1="0" y1="122" x2="600" y2="122" stroke="var(--line-soft)" strokeWidth="1" vectorEffect="non-scaling-stroke"></line>
                   <line x1="0" y1="180" x2="600" y2="180" stroke="var(--line)" strokeWidth="1" vectorEffect="non-scaling-stroke"></line>
                   <path d={g.area} fill="url(#evoFill)" style={{ animation: `fadeIn 700ms ${EASE} 380ms both` }}></path>
-                  <path
-                    d={g.line}
-                    fill="none"
-                    stroke="var(--brand)"
-                    strokeWidth="2.25"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    vectorEffect="non-scaling-stroke"
-                    style={{ strokeDasharray: 1400, animation: `drawLine 1100ms ${EASE} 260ms both` }}
-                  ></path>
+                  <path d={g.line} fill="none" stroke="var(--brand)" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" style={{ strokeDasharray: 1400, animation: `drawLine 1100ms ${EASE} 260ms both` }}></path>
                 </svg>
                 {hp && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      bottom: '16px',
-                      width: '1px',
-                      background: 'color-mix(in srgb, var(--brand) 45%, transparent)',
-                      left: `${((hp.x / 600) * 100).toFixed(2)}%`,
-                    }}
-                  ></div>
+                  <div style={{ position: 'absolute', top: 0, bottom: '16px', width: '1px', background: 'color-mix(in srgb, var(--brand) 45%, transparent)', left: `${((hp.x / 600) * 100).toFixed(2)}%` }}></div>
                 )}
                 {hp && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      width: '11px',
-                      height: '11px',
-                      borderRadius: '999px',
-                      background: 'var(--brand)',
-                      border: '2.5px solid var(--surface)',
-                      boxShadow: '0 2px 8px rgba(0,43,64,0.18)',
-                      left: `${((hp.x / 600) * 100).toFixed(2)}%`,
-                      top: `${((hp.y / g.H) * 100).toFixed(2)}%`,
-                      transform: 'translate(-50%,-50%)',
-                    }}
-                  ></div>
+                  <div style={{ position: 'absolute', width: '11px', height: '11px', borderRadius: '999px', background: 'var(--brand)', border: '2.5px solid var(--surface)', boxShadow: '0 2px 8px rgba(0,43,64,0.18)', left: `${((hp.x / 600) * 100).toFixed(2)}%`, top: `${((hp.y / g.H) * 100).toFixed(2)}%`, transform: 'translate(-50%,-50%)' }}></div>
                 )}
                 {hp && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: `${Math.min(92, Math.max(8, (hp.x / 600) * 100)).toFixed(2)}%`,
-                      top: `${((hp.y / g.H) * 100).toFixed(2)}%`,
-                      transform: 'translate(-50%,calc(-100% - 16px))',
-                      background: 'var(--brand)',
-                      color: '#fff',
-                      padding: '8px 12px',
-                      borderRadius: '10px',
-                      boxShadow: '0 8px 24px rgba(0,43,64,0.22)',
-                      whiteSpace: 'nowrap',
-                      pointerEvents: 'none',
-                    }}
-                  >
+                  <div style={{ position: 'absolute', left: `${Math.min(92, Math.max(8, (hp.x / 600) * 100)).toFixed(2)}%`, top: `${((hp.y / g.H) * 100).toFixed(2)}%`, transform: 'translate(-50%,calc(-100% - 16px))', background: 'var(--brand)', color: '#fff', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,43,64,0.22)', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
                     <div style={{ fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.6 }}>
                       {(serie.pointLabels || serie.labels)[hover] || ''}
                     </div>
@@ -794,89 +449,25 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
                 <div style={{ position: 'relative', width: '172px', height: '172px' }}>
                   <svg viewBox="0 0 160 160" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                     <circle cx="80" cy="80" r="64" fill="none" stroke="var(--line-soft)" strokeWidth="14"></circle>
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r="64"
-                      fill="none"
-                      stroke="var(--brand)"
-                      strokeWidth="14"
-                      strokeLinecap="round"
-                      strokeDasharray={`${anelPreenchido.toFixed(0)} ${anelTotal}`}
-                      style={{ animation: `dashIn 1000ms ${EASE} 320ms both` }}
-                    ></circle>
+                    <circle cx="80" cy="80" r="64" fill="none" stroke="var(--brand)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${anelPreenchido.toFixed(0)} ${anelTotal}`} style={{ animation: `dashIn 1000ms ${EASE} 320ms both` }}></circle>
                   </svg>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '2px',
-                    }}
-                  >
-                    <span
-                      data-count-to={taxaConversao}
-                      style={{
-                        fontSize: '38px',
-                        fontWeight: 600,
-                        letterSpacing: '-0.03em',
-                        lineHeight: 1,
-                        color: 'var(--txt)',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                    <span data-count-to={taxaConversao} style={{ fontSize: '38px', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums' }}>
                       {nf(0).format(taxaConversao)}
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--txt-3)' }}>por cento</span>
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '10px', borderTop: '1px solid var(--line-soft)', paddingTop: '14px' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--txt-3)', marginBottom: '3px' }}>
-                    Meta
-                  </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--txt)' }}>{DEMO.metaConversao}</div>
-                </div>
-                <div style={{ width: '1px', background: 'var(--line-soft)' }}></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--txt-3)', marginBottom: '3px' }}>
-                    Anterior
-                  </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--txt-2)' }}>{DEMO.conversaoAnteriorCurto}</div>
-                </div>
-              </div>
             </div>
-            {/* "Origem dos leads" removido: lead nao tem coluna origem.
-                visitante.origem existe no model mas o Gate nunca envia, e nao
-                ha FK visitante->lead pra atribuir. Sem o campo na captacao, o
-                card so podia ser mock. */}
 
-            {/* gridColumn 1/-1: o design tinha 4 cards nesta seção (2x2). Com
-                "Origem dos leads" fora sobram 3, e o auto-fit deixaria o funil
-                sozinho em meia coluna com um vão vazio ao lado. Ocupando a
-                linha inteira, nenhum outro card muda de proporção.
-                Delay 380ms em vez de 420 pra manter a cascata de 40ms. */}
             <div style={{ ...CARD, gap: '20px', gridColumn: '1 / -1', animation: `riseIn 520ms ${EASE} 380ms both` }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                 <div>
                   <h3 style={CARD_TITULO}>Funil de vendas</h3>
                   <p style={CARD_SUB}>Do primeiro contato ao fechamento</p>
                 </div>
-                <span
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: 'var(--brand)',
-                    background: 'color-mix(in srgb, var(--brand) 10%, transparent)',
-                    padding: '5px 10px',
-                    borderRadius: '999px',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)', background: 'color-mix(in srgb, var(--brand) 10%, transparent)', padding: '5px 10px', borderRadius: '999px', whiteSpace: 'nowrap' }}>
                   {`${nf(1).format(taxaFechamento)}% fecham`}
                 </span>
               </div>
@@ -885,28 +476,9 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
                   <div key={f.status} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <span style={{ width: '104px', flex: '0 0 auto', fontSize: '13px', color: 'var(--txt-2)' }}>{f.label}</span>
                     <div style={{ flex: '1 1 auto', height: '26px', borderRadius: '8px', background: 'var(--line-soft)', overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          width: `${f.pct}%`,
-                          height: '100%',
-                          borderRadius: '8px',
-                          background: f.fill,
-                          transformOrigin: 'left',
-                          animation: `growX 720ms ${EASE} ${f.delay}ms both`,
-                        }}
-                      ></div>
+                      <div style={{ width: `${f.pct}%`, height: '100%', borderRadius: '8px', background: f.fill, transformOrigin: 'left', animation: `growX 720ms ${EASE} ${f.delay}ms both` }}></div>
                     </div>
-                    <span
-                      style={{
-                        width: '44px',
-                        flex: '0 0 auto',
-                        textAlign: 'right',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: 'var(--txt)',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
+                    <span style={{ width: '44px', flex: '0 0 auto', textAlign: 'right', fontSize: '13px', fontWeight: 600, color: 'var(--txt)', fontVariantNumeric: 'tabular-nums' }}>
                       {nf(0).format(f.total)}
                     </span>
                   </div>
@@ -915,164 +487,47 @@ export function Dashboard({ dark = false, accent = '#2F3E7E', sidebarCollapsed =
             </div>
           </section>
 
-          <section
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--line)',
-              borderRadius: '16px',
-              animation: `riseIn 520ms ${EASE} 460ms both`,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '16px',
-                flexWrap: 'wrap',
-                padding: '22px 24px',
-              }}
-            >
+          <section style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', animation: `riseIn 520ms ${EASE} 460ms both` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', padding: '22px 24px' }}>
               <div>
                 <h3 style={CARD_TITULO}>Leads recentes</h3>
                 <p style={CARD_SUB}>{`Últimos ${recentes.length} cadastros`}</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 12px',
-                    border: '1px solid var(--line)',
-                    borderRadius: '999px',
-                    color: 'var(--txt-3)',
-                  }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="7.5"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                  </svg>
-                  <span style={{ fontSize: '13px' }}>Buscar lead</span>
-                </div>
-                <Link
-                  to="/admin/leads"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: 'var(--brand)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '8px 4px',
-                  }}
-                >
-                  Ver todos
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 17 17 7"></path>
-                    <path d="M7 7h10v10"></path>
-                  </svg>
-                </Link>
-              </div>
+              <Link to="/admin/leads" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--brand)', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '8px 4px' }}>
+                Ver todos
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17 17 7"></path>
+                  <path d="M7 7h10v10"></path>
+                </svg>
+              </Link>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <div style={{ minWidth: '820px' }}>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: GRID_COLS,
-                    gap: '16px',
-                    padding: '10px 24px',
-                    borderTop: '1px solid var(--line-soft)',
-                    borderBottom: '1px solid var(--line-soft)',
-                    fontSize: '11px',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--txt-3)',
-                  }}
-                >
+                <div style={{ display: 'grid', gridTemplateColumns: GRID_COLS, gap: '16px', padding: '10px 24px', borderTop: '1px solid var(--line-soft)', borderBottom: '1px solid var(--line-soft)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--txt-3)' }}>
                   <span>Nome</span>
                   <span>Telefone</span>
                   <span>E-mail</span>
                   <span>Status</span>
                   <span>Cadastro</span>
-                  <span></span>
                 </div>
                 {recentes.map((lead, i) => {
                   const av = AVATARES[i % AVATARES.length];
                   const st = STATUS_META[lead.status] ?? STATUS_META['1. Novo Lead'];
                   const ultima = i === recentes.length - 1;
                   return (
-                    <div
-                      key={lead.id}
-                      className="h-row"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: GRID_COLS,
-                        gap: '16px',
-                        padding: '14px 24px',
-                        alignItems: 'center',
-                        ...(ultima ? null : { borderBottom: '1px solid var(--line-soft)' }),
-                        transition: `background 160ms ${EASE}`,
-                      }}
-                    >
+                    <div key={lead.id} className="h-row" style={{ display: 'grid', gridTemplateColumns: GRID_COLS, gap: '16px', padding: '14px 24px', alignItems: 'center', ...(ultima ? null : { borderBottom: '1px solid var(--line-soft)' }), transition: `background 160ms ${EASE}` }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '11px', minWidth: 0 }}>
-                        <div
-                          style={{
-                            width: '34px',
-                            height: '34px',
-                            flex: '0 0 auto',
-                            borderRadius: '999px',
-                            background: av.bg,
-                            color: av.fg,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                          }}
-                        >
+                        <div style={{ width: '34px', height: '34px', flex: '0 0 auto', borderRadius: '999px', background: av.bg, color: av.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600 }}>
                           {iniciais(lead.nome)}
                         </div>
                         <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--txt)', ...CELULA_ELIPSE }}>{lead.nome}</span>
                       </div>
                       <span style={{ ...CELULA_TXT2, fontVariantNumeric: 'tabular-nums' }}>{formatarTelefone(lead.telefone)}</span>
                       <span style={{ ...CELULA_TXT2, ...CELULA_ELIPSE }}>{lead.email}</span>
-                      <span
-                        style={{
-                          justifySelf: 'start',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: st.fg,
-                          background: st.bg,
-                          ...(st.border ? { border: st.border } : null),
-                          padding: st.padding ?? '5px 10px',
-                          borderRadius: '999px',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                      <span style={{ justifySelf: 'start', fontSize: '12px', fontWeight: 600, color: st.fg, background: st.bg, ...(st.border ? { border: st.border } : null), padding: st.padding ?? '5px 10px', borderRadius: '999px', whiteSpace: 'nowrap' }}>
                         {st.label}
                       </span>
                       <span style={{ fontSize: '13px', color: 'var(--txt-3)', fontVariantNumeric: 'tabular-nums' }}>{ddmm(lead.criado_em)}</span>
-                      <button
-                        type="button"
-                        className="h-row-btn"
-                        style={{
-                          width: '30px',
-                          height: '30px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: 0,
-                          background: 'transparent',
-                          borderRadius: '8px',
-                          color: 'var(--txt-3)',
-                          cursor: 'pointer',
-                          transition: `all 160ms ${EASE}`,
-                        }}
-                      >
-                        <IcoMais />
-                      </button>
                     </div>
                   );
                 })}

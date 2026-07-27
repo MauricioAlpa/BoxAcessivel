@@ -5,9 +5,7 @@ import { AppError } from '../utils/app.error.js';
 
 class AuthController{
   static async login(req, res, next) {
-    console.log(">>> Entrou no AuthController.login");
     try {
-      console.log(">>> Entrou no AuthController.login");
       const { email, senha } = req.body;
 
 
@@ -17,12 +15,10 @@ class AuthController{
 
       const admin = await findAdminByEmail(email);
 
-      console.log('Admin encontrado:', admin);
       if (!admin) throw new AppError('Credenciais inválidas', 401);
 
       const senhaValida = await bcrypt.compare(senha, admin.senha_hash);
 
-      console.log('Senha válida?', senhaValida);
       if (!senhaValida) throw new AppError('Credenciais inválidas', 401);
 
       const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET, { expiresIn: '2h' });
