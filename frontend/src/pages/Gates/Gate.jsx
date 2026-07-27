@@ -54,11 +54,11 @@ export function Gate() {
           <h1>
             Solução de
             <br />
-            Acessibilidade
+            acessibilidade
             <br />
-            que Transforma
+            que transforma
             <br />
-            Espaços
+            espaços
           </h1>
 
           <p className="gate__subtitle">
@@ -108,7 +108,7 @@ export function Gate() {
 
           <a
             className="gate__whatsapp"
-            href="https://wa.me/5571993459678?text=Olá,%20gostaria%20de%20conhecer%20a%20Box%20Acessível."
+            href="https://wa.me/5571992425858?text=Olá,%20gostaria%20de%20conhecer%20a%20Box%20Acessível."
             target="_blank"
             rel="noreferrer"
           >
