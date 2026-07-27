@@ -23,12 +23,4 @@ app.get("/health", (req, res) => {
 
 app.use(routes);
 
-app.listen(PORT, "0.0.0.0", () => {
-  if (NODE_ENV === "development") {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-  } else {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  }
-});
-
 export default app;

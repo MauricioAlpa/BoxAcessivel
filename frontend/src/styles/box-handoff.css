@@ -1,0 +1,30 @@
+/* ============================================================
+   Box Acessível — base compartilhada das telas do handoff
+   (design_handoff_box_acessivel/tokens.css)
+
+   Contém SÓ a fonte e os keyframes. Os tokens de cor/espaço são
+   declarados inline no wrapper de cada tela, exatamente como os
+   arquivos .dc.html fazem.
+
+   Por que não um bloco :root: no Vite todo CSS importado é global.
+   Um :root aqui sobrescreveria tokens de mesmo nome do
+   styles/tokens.css do projeto — --font-sans (aplicado no body) e
+   --radius-lg colidem — e vazaria para telas que não são do handoff.
+   Declarar inline por tela elimina a colisão sem mudar o render.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Atenção: o riseIn do Dashboard (e do tokens.css) parte de
+   translateY(12px); o do Login e o da Captura de Leads, de 14px. Um
+   keyframe único deixaria telas erradas, então são dois. */
+@keyframes riseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes riseIn14 { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes slideRight { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes drawLine { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
+@keyframes dashIn { from { stroke-dasharray: 0 402; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { background-position: -420px 0; } 100% { background-position: 420px 0; } }
+@keyframes softPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }

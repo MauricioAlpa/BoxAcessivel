@@ -1,0 +1,11 @@
+/* Hover dos itens da sidebar.
+   No runtime do design, style-hover="X" compila para
+   `.scpN:hover { X !important }` (support.js:1567). Como a base é toda
+   inline style, o !important é o que faz o hover vencer.
+
+   style-hover="background:rgba(255,255,255,0.10);color:#fff" */
+
+.h-nav:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #fff !important;
+}
